@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+
+  webserver:
+    image: nginx:stable-alpine
+    container_name: project_webserver
+    restart: always
+    ports:
+      - 8888:80
+    volumes:
+      - ./src:/var/www/html
+      - ./docker/nginx:/etc/nginx/conf.d
+    depends_on:
+      - app
+      - db
+    networks:
+      - projectnetwork
+
+  db:
+    image: mysql:8.0
+    container_name: project_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: project
+      MYSQL_USER: project
+      MYSQL_PASSWORD: 123456
+      MYSQL_ROOT_PASSWORD: 123456
+    ports:
+      - 3306:3306
+    volumes:
+      - ./docker/mysql:/var/lib/mysql
+    networks:
+      - projectnetwork
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: project_app
+    volumes:
+      - ./src:/var/www/html
+    ports:
+      - 9000:80
+    networks:
+      - projectnetwork
+
+  # rabbitmq:
+  #   image: rabbitmq:latest
+  #   container_name: project_rabbitmq
+  #   ports:
+  #     - "5672:5672"
+  #     - "15672:15672"
+  #   environment:
+  #     RABBITMQ_DEFAULT_USER: adm
+  #     RABBITMQ_DEFAULT_PASS: 123456
+  #   networks:
+  #     - projectnetwork
+
+networks:
+  projectnetwork:
+    driver: bridge
